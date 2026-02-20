@@ -22,6 +22,8 @@ fn run_app(terminal: &mut DefaultTerminal, app: &mut App) -> std::io::Result<()>
                 match key.code {
                     KeyCode::Char('q') => return Ok(()),
                     KeyCode::Up => app.previous(),
+                    KeyCode::Char('k') => app.previous(),
+                    KeyCode::Char('j') => app.next(),
                     KeyCode::Down => app.next(),
                     _ => {}
                 }
