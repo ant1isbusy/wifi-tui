@@ -1,28 +1,32 @@
+mod app;
+mod ui;
+mod network;
 
-use ratatui::{DefaultTerminal, Frame};
-use ratatui::widgets::{Block, Borders};
-use ratatui::style::{Color, Style};
+use app::App;
+use color_eyre::Result;
+use ratatui::DefaultTerminal;
 
-fn main() -> color_eyre::Result<()> {
+fn main() -> Result<()> {
     color_eyre::install()?;
-    ratatui::run(app)?;
+    let mut app = App::new();
+    ratatui::run(|terminal| run_app(terminal, &mut app))?;
     Ok(())
 }
 
-fn app(terminal: &mut DefaultTerminal) -> std::io::Result<()> {
+fn run_app(terminal: &mut DefaultTerminal, app: &mut App) -> std::io::Result<()> {
     loop {
-        terminal.draw(render)?; // redrawn every time
-        if crossterm::event::read()?.is_key_press() {
-            break Ok(());
+        terminal.draw(|frame| ui::render(app, frame))?;
+        if let crossterm::event::Event::Key(key) = crossterm::event::read()? {
+            if key.kind == crossterm::event::KeyEventKind::Press {
+                use crossterm::event::KeyCode;
+                match key.code {
+                    KeyCode::Char('q') => return Ok(()),
+                    KeyCode::Up => app.previous(),
+                    KeyCode::Down => app.next(),
+                    _ => {}
+                }
+            }
         }
     }
 }
 
-fn render(frame: &mut Frame) {
-    let my_block = Block::default()
-        .title(" Network Manager ")
-        .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::Cyan));
-
-    frame.render_widget(my_block, frame.area());
-}
