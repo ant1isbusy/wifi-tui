@@ -1,0 +1,11 @@
+[package]
+authors = ["Anto @ant1isbusy"]
+name = "wifi-tui"
+version = "0.1.0"
+edition = "2024"
+description = "A simple wifi-network management TUI"
+
+[dependencies]
+color-eyre = "0.6.3"
+crossterm = "0.29.0"
+ratatui = "0.30.0"
