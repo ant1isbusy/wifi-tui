@@ -38,7 +38,7 @@ pub fn render(app: &App, frame: &mut Frame) {
             .wifi_list
             .iter()
             .enumerate()
-            .map(|(i, s)| {
+            .map(|(i, net)| {
                 let style = if i == app.selected_index {
                     Style::default()
                         .fg(Color::Yellow)
@@ -46,7 +46,8 @@ pub fn render(app: &App, frame: &mut Frame) {
                 } else {
                     Style::default()
                 };
-                ListItem::new(s.as_str()).style(style)
+                let content = format!("{:<20}", net.ssid);
+                ListItem::new(content).style(style)
             })
             .collect();
 

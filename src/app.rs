@@ -1,14 +1,14 @@
-use crate::network;
+use crate::network::{self, WifiNetwork};
 use std::sync::mpsc::{self, Receiver, Sender};
 
 pub struct App {
     // holds the state, what we have currently selected,
     // and the list of available networks
-    pub wifi_list: Vec<String>,
+    pub wifi_list: Vec<WifiNetwork>,
     pub selected_index: usize,
     pub is_scanning: bool,
-    pub tx: Sender<Vec<String>>,
-    pub rx: Receiver<Vec<String>>,
+    pub tx: Sender<Vec<WifiNetwork>>,
+    pub rx: Receiver<Vec<WifiNetwork>>,
 }
 
 impl App {
