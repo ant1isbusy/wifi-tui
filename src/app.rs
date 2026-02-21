@@ -1,12 +1,21 @@
 use crate::network::{self, WifiNetwork};
 use std::sync::mpsc::{self, Receiver, Sender};
 
+#[derive(PartialEq)]
+pub enum InputMode {
+    Normal,
+    Editing,
+}
+
 pub struct App {
     // holds the state, what we have currently selected,
     // and the list of available networks
     pub wifi_list: Vec<WifiNetwork>,
-    pub selected_index: usize,
+    pub highlighted_index: usize,
     pub is_scanning: bool,
+    pub selected_network: Option<WifiNetwork>,
+    pub password_input: String,
+    pub input_mode: InputMode,
     pub tx: Sender<Vec<WifiNetwork>>,
     pub rx: Receiver<Vec<WifiNetwork>>,
 }
@@ -16,8 +25,11 @@ impl App {
         let (tx, rx) = mpsc::channel();
         Self {
             wifi_list: Vec::new(),
-            selected_index: 0,
+            highlighted_index: 0,
             is_scanning: false,
+            input_mode: InputMode::Normal,
+            selected_network: None,
+            password_input: String::new(),
             tx,
             rx,
         }
@@ -44,14 +56,14 @@ impl App {
     }
 
     pub fn next(&mut self) {
-        if self.selected_index < self.wifi_list.len() - 1 {
-            self.selected_index += 1;
+        if self.highlighted_index < self.wifi_list.len() - 1 {
+            self.highlighted_index += 1;
         }
     }
 
     pub fn previous(&mut self) {
-        if self.selected_index > 0 {
-            self.selected_index -= 1;
+        if self.highlighted_index > 0 {
+            self.highlighted_index -= 1;
         }
     }
 }

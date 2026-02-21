@@ -2,7 +2,7 @@ mod app;
 mod network;
 mod ui;
 
-use app::App;
+use app::{App, InputMode};
 use color_eyre::Result;
 use crossterm::event::{self, KeyCode};
 use ratatui::DefaultTerminal;
@@ -20,12 +20,29 @@ fn run_app(terminal: &mut DefaultTerminal, app: &mut App) -> std::io::Result<()>
     loop {
         app.update();
         terminal.draw(|frame| ui::render(app, frame))?;
-
+        // Todo add scheduled rescan
         if event::poll(Duration::from_millis(100))?
             && let event::Event::Key(key) = event::read()?
             && key.kind == event::KeyEventKind::Press
         {
             match key.code {
+                KeyCode::Enter => {
+                    if !app.wifi_list.is_empty() {
+                        app.selected_network = Some(app.wifi_list[app.highlighted_index].clone());
+                        app.input_mode = InputMode::Editing;
+                    }
+                }
+                KeyCode::Char(c) if app.input_mode == InputMode::Editing => {
+                    app.password_input.push(c);
+                }
+                KeyCode::Backspace if app.input_mode == InputMode::Editing => {
+                    app.password_input.pop();
+                }
+                KeyCode::Esc => {
+                    app.input_mode = InputMode::Normal;
+                    app.selected_network = None;
+                    app.password_input.clear();
+                }
                 KeyCode::Char('q') => return Ok(()),
                 KeyCode::Char('r') => app.start_scan(),
                 KeyCode::Up => app.previous(),
