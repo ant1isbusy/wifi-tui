@@ -1,4 +1,6 @@
+<a href="https://github.com/ant1isbusy/wifi-tui">
+  <img alt="wifi-tui" src="img/banner.png">
+</a>
 
-# wifi-tui
-
-My own wifi-management tui, using ratatui.
+A TUI for quickly connecting to WIFI networks.
+Built for my personal use on hyprland and as a practice project for learning ratatui.

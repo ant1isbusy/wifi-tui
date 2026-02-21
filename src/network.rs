@@ -9,9 +9,24 @@ pub struct WifiNetwork {
     pub is_saved: bool,
 }
 
-pub fn connect_to_net(net: WifiNetwork, pass: String) {
-    let output =
-        Command::new("nmcli").args(["device", "wifi", "connect", &net.ssid, "--password", &pass]);
+pub fn connect_to_net(ssid: &str, pass: Option<String>) -> std::io::Result<()> {
+    let mut cmd = Command::new("nmcli");
+
+    cmd.args(["device", "wifi", "connect", ssid]);
+
+    if let Some(password) = pass {
+        cmd.arg("password");
+        cmd.arg(password);
+    }
+
+    let output = cmd.output()?;
+
+    if output.status.success() {
+        Ok(())
+    } else {
+        let error_msg = String::from_utf8_lossy(&output.stderr);
+        Err(std::io::Error::other(error_msg))
+    }
 }
 
 pub fn get_saved_ssids() -> HashSet<String> {

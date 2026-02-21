@@ -48,6 +48,27 @@ impl App {
         });
     }
 
+    pub fn connect(&mut self) {
+        if let Some(net) = self.selected_network.as_ref() {
+            let pass = if net.is_saved {
+                None
+            } else {
+                Some(self.password_input.clone())
+            };
+            match network::connect_to_net(&net.ssid, pass) {
+                Ok(_) => {
+                    self.selected_network = None;
+                    self.password_input.clear();
+                    self.input_mode = InputMode::Normal;
+                }
+                Err(e) => {
+                    // TODO: put error message into TUI
+                    eprintln!("Connection failed: {}", e);
+                }
+            }
+        }
+    }
+
     pub fn update(&mut self) {
         if let Ok(networks) = self.rx.try_recv() {
             self.wifi_list = networks;
