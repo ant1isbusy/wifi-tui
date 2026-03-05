@@ -82,6 +82,26 @@ impl App {
         }
     }
 
+    pub fn forget(&mut self) {
+        if self.wifi_list.is_empty() {
+            return;
+        }
+        
+        let ssid = self.selected_network
+            .as_ref()
+            .unwrap_or_else(|| &self.wifi_list[self.highlighted_index])
+            .ssid
+            .clone();
+
+        std::thread::spawn(move || {
+            let _ = network::forget_net(&ssid);
+        });
+
+        self.selected_network = None;
+        self.input_mode = InputMode::Normal;
+        self.start_scan();
+    }
+
     pub fn update(&mut self) {
         if let Ok(networks) = self.rx.try_recv() {
             self.wifi_list = networks;

@@ -62,6 +62,10 @@ fn run_app(terminal: &mut DefaultTerminal, app: &mut App) -> std::io::Result<()>
                 KeyCode::Char('q') => return Ok(()),
                 KeyCode::Char('r') => app.start_scan(),
                 KeyCode::Up => app.previous(),
+                KeyCode::Char('d') if app.input_mode == InputMode::Normal => {
+                    app.forget();
+                    app.connection_error = None;
+                }
                 KeyCode::Char('k') => app.previous(),
                 KeyCode::Char('j') => app.next(),
                 KeyCode::Down => app.next(),

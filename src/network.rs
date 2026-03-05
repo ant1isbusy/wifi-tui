@@ -30,6 +30,19 @@ pub fn connect_to_net(ssid: &str, pass: Option<String>) -> std::io::Result<()> {
     }
 }
 
+pub fn forget_net(ssid: &str) -> std::io::Result<()> {
+    let output = Command::new("nmcli")
+        .args(["connection", "delete", "id", ssid])
+        .output()?;
+
+    if output.status.success() {
+        Ok(())
+    } else {
+        let error_msg = String::from_utf8_lossy(&output.stderr);
+        Err(std::io::Error::other(error_msg))
+    }
+}
+
 fn parse_network_line(line: &str, saved_ssids: &HashSet<String>) -> Option<WifiNetwork> {
     let mut right = line.rsplitn(3, ':');
     let security = right.next()?;
