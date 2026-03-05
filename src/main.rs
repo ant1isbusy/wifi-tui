@@ -6,7 +6,7 @@ use app::{App, InputMode};
 use color_eyre::Result;
 use crossterm::event::{self, KeyCode};
 use ratatui::DefaultTerminal;
-use std::time::Duration;
+use std::{time::Duration};
 
 fn main() -> Result<()> {
     color_eyre::install()?;
@@ -32,7 +32,8 @@ fn run_app(terminal: &mut DefaultTerminal, app: &mut App) -> std::io::Result<()>
 
                     match app.input_mode {
                         app::InputMode::Normal => {
-                            let net = &app.wifi_list[app.highlighted_index];
+                            let idx = app.table_state.selected().unwrap_or(0);
+                            let net = &app.wifi_list[idx];
                             app.selected_network = Some(net.clone());
 
                             if net.is_saved {

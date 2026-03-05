@@ -1,5 +1,6 @@
 use crate::network::{self, WifiNetwork};
 use std::sync::mpsc::{self, Receiver, Sender};
+use ratatui::widgets::TableState;
 
 #[derive(PartialEq)]
 pub enum InputMode {
@@ -11,6 +12,7 @@ pub enum InputMode {
 // and the list of available networks
 pub struct App {
     pub wifi_list: Vec<WifiNetwork>,
+    pub table_state: TableState,
     pub highlighted_index: usize,
     pub is_scanning: bool,
     pub is_connecting: bool,
@@ -29,8 +31,11 @@ impl App {
     pub fn new() -> Self {
         let (tx, rx) = mpsc::channel();
         let (conn_tx, conn_rx) = mpsc::channel();
+        let mut table_state = TableState::default();
+        table_state.select(Some(0));
         Self {
             wifi_list: Vec::new(),
+            table_state,
             highlighted_index: 0,
             is_scanning: false,
             is_connecting: false,
@@ -105,8 +110,9 @@ impl App {
     pub fn update(&mut self) {
         if let Ok(networks) = self.rx.try_recv() {
             self.wifi_list = networks;
-            if self.highlighted_index >= self.wifi_list.len() {
-                self.highlighted_index = self.wifi_list.len().saturating_sub(1);
+            let current_selection = self.table_state.selected().unwrap_or(0);
+            if current_selection >= self.wifi_list.len() && !self.wifi_list.is_empty() {
+                self.table_state.select(Some(self.wifi_list.len().saturating_sub(1)));
             }
             self.is_scanning = false;
         }
@@ -130,14 +136,36 @@ impl App {
     }
 
     pub fn next(&mut self) {
-        if self.highlighted_index < self.wifi_list.len().saturating_sub(1) {
-            self.highlighted_index += 1;
+        if self.wifi_list.is_empty() {
+            return;
         }
+        let i = match self.table_state.selected() {
+            Some(i) => {
+                if i >= self.wifi_list.len().saturating_sub(1) {
+                    i
+                } else {
+                    i + 1
+                }
+            }
+            None => 0,
+        };
+        self.table_state.select(Some(i));
     }
 
     pub fn previous(&mut self) {
-        if self.highlighted_index > 0 {
-            self.highlighted_index -= 1;
+        if self.wifi_list.is_empty() {
+            return;
         }
+        let i = match self.table_state.selected() {
+            Some(i) => {
+                if i == 0 {
+                    0
+                } else {
+                    i - 1
+                }
+            }
+            None => 0,
+        };
+        self.table_state.select(Some(i));
     }
 }

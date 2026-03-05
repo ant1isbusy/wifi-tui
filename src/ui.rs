@@ -7,7 +7,7 @@ use ratatui::{
 
 use crate::app::App;
 
-pub fn render(app: &App, frame: &mut Frame) {
+pub fn render(app: &mut App, frame: &mut Frame) {
     let area = frame.area();
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -55,13 +55,7 @@ pub fn render(app: &App, frame: &mut Frame) {
                 .add_modifier(Modifier::BOLD),
         );
 
-        let rows = app.wifi_list.iter().enumerate().map(|(i, net)| {
-            let style = if i == app.highlighted_index {
-                Style::default().fg(Color::Yellow).bold()
-            } else {
-                Style::default()
-            };
-
+        let rows = app.wifi_list.iter().map(|net| {
             let status_cell = if net.is_connected {
                 Cell::from("●").style(Style::default().fg(Color::Green))
             } else if net.is_saved {
@@ -76,7 +70,6 @@ pub fn render(app: &App, frame: &mut Frame) {
                 Cell::from(format!(" {}%", net.signal)),
                 Cell::from(format!(" {}", net.security)),
             ])
-            .style(style)
         });
 
         let table = Table::new(
@@ -91,13 +84,13 @@ pub fn render(app: &App, frame: &mut Frame) {
         .header(header)
         .block(
             Block::default()
-                .borders(Borders::ALL)
-                .border_type(BorderType::Rounded)
+            .borders(Borders::ALL)
+            .border_type(BorderType::Rounded)
         )
-        .highlight_symbol(">> ")
-        .row_highlight_style(Style::default().add_modifier(Modifier::REVERSED));
+        .highlight_symbol("> ")
+        .row_highlight_style(Style::default().bold());
 
-        frame.render_widget(table, body_chunks[0]);
+        frame.render_stateful_widget(table, body_chunks[0], &mut app.table_state);
 
         if let Some(net) = &app.selected_network {
             let side_pane_block = Block::default()
