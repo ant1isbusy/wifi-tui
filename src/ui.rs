@@ -114,7 +114,7 @@ pub fn render(app: &App, frame: &mut Frame) {
                 .constraints([
                     Constraint::Length(4),
                     Constraint::Length(3),
-                    Constraint::Min(0),
+                    Constraint::Min(2),
                 ])
                 .split(pane_area);
 
@@ -138,6 +138,18 @@ pub fn render(app: &App, frame: &mut Frame) {
                     .border_type(BorderType::Plain),
             );
             frame.render_widget(password_box, pane_chunks[1]);
+
+            if app.is_connecting {
+                let connecting_msg = Paragraph::new("Connecting...")
+                    .style(Style::default().fg(Color::Cyan).bold())
+                    .alignment(Alignment::Center);
+                frame.render_widget(connecting_msg, pane_chunks[2]);
+            } else if let Some(err) = &app.connection_error {
+                let error_msg = Paragraph::new(format!("Error: {}", err))
+                    .style(Style::default().fg(Color::Red).bold())
+                    .wrap(ratatui::widgets::Wrap { trim: true });
+                frame.render_widget(error_msg, pane_chunks[2]);
+            }
 
             if let crate::app::InputMode::Editing = app.input_mode {
                 frame.set_cursor_position((
