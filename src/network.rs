@@ -7,6 +7,7 @@ pub struct WifiNetwork {
     pub signal: String,
     pub security: String,
     pub is_saved: bool,
+    pub is_connected: bool,
 }
 
 pub fn connect_to_net(ssid: &str, pass: Option<String>) -> std::io::Result<()> {
@@ -29,6 +30,26 @@ pub fn connect_to_net(ssid: &str, pass: Option<String>) -> std::io::Result<()> {
     }
 }
 
+fn parse_network_line(line: &str, saved_ssids: &HashSet<String>) -> Option<WifiNetwork> {
+    let mut right = line.rsplitn(3, ':');
+    let security = right.next()?;
+    let signal = right.next()?;
+    let left = right.next()?;
+
+    let (in_use, ssid) = left.split_once(':')?;
+    if ssid.is_empty() {
+        return None;
+    }
+
+    Some(WifiNetwork {
+        ssid: ssid.to_string(),
+        signal: signal.to_string(),
+        security: security.to_string(),
+        is_saved: saved_ssids.contains(ssid),
+        is_connected: in_use.trim() == "*",
+    })
+}
+
 pub fn get_saved_ssids() -> HashSet<String> {
     let output = Command::new("nmcli")
         .args(["-t", "-f", "NAME", "connection", "show"])
@@ -49,32 +70,19 @@ pub fn get_saved_ssids() -> HashSet<String> {
 
 pub fn fetch_wifi_networks() -> Vec<WifiNetwork> {
     let output = Command::new("nmcli")
-        .args(["-t", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi", "list"])
+        .args(["-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY", "dev", "wifi", "list"])
         .output();
 
     match output {
         Ok(out) => {
             let saved_ssids = get_saved_ssids();
             let stdout = String::from_utf8_lossy(&out.stdout);
-            let networks: Vec<WifiNetwork> = stdout
+
+            stdout
                 .lines()
                 .filter(|line| !line.is_empty())
-                .filter_map(|line| {
-                    let parsed: Vec<&str> = line.split(":").collect();
-                    if parsed.len() >= 3 && !parsed[0].is_empty() {
-                        Some(WifiNetwork {
-                            ssid: parsed[0].to_string(),
-                            signal: parsed[1].to_string(),
-                            security: parsed[2].to_string(),
-                            is_saved: saved_ssids.contains(parsed[0]),
-                        })
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-
-            networks
+                .filter_map(|line| parse_network_line(line, &saved_ssids))
+                .collect()
         }
         Err(_) => Vec::new(),
     }

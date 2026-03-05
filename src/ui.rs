@@ -44,7 +44,7 @@ pub fn render(app: &App, frame: &mut Frame) {
         };
 
         let header = Row::new(vec![
-            Cell::from(format!("{:<20.20}", "SSID")),
+            Cell::from(format!(" {:<20.20}", "SSID")),
             Cell::from(" "),
             Cell::from("SIGNAL"),
             Cell::from("SECURITY"),
@@ -62,9 +62,17 @@ pub fn render(app: &App, frame: &mut Frame) {
                 Style::default()
             };
 
+            let status_cell = if net.is_connected {
+                Cell::from("●").style(Style::default().fg(Color::Green))
+            } else if net.is_saved {
+                Cell::from("·").style(Style::default().fg(Color::DarkGray))
+            } else {
+                Cell::from(" ")
+            };
+
             Row::new(vec![
                 Cell::from(format!(" {:<20.20}", net.ssid)),
-                Cell::from(if net.is_saved { "." } else { " " }),
+                status_cell,
                 Cell::from(format!(" {}%", net.signal)),
                 Cell::from(format!(" {}", net.security)),
             ])
@@ -85,7 +93,6 @@ pub fn render(app: &App, frame: &mut Frame) {
             Block::default()
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded)
-                .title(" Available Networks "),
         )
         .highlight_symbol(">> ")
         .row_highlight_style(Style::default().add_modifier(Modifier::REVERSED));

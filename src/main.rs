@@ -27,7 +27,7 @@ fn run_app(terminal: &mut DefaultTerminal, app: &mut App) -> std::io::Result<()>
             match key.code {
                 KeyCode::Enter => {
                     if app.wifi_list.is_empty() {
-                        return Ok(());
+                        continue;
                     }
 
                     match app.input_mode {

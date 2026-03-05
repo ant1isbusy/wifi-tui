@@ -3,4 +3,6 @@
 </a>
 
 A TUI for quickly connecting to WIFI networks.
-Built for my personal use on hyprland and as a practice project for learning ratatui.
+Built for my personal and as a practice project for learning ratatui.
+
+For now built like wrapper for nmcli for quick prototyping -> TODO: look into dbus implementation.

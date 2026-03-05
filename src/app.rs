@@ -14,6 +14,7 @@ pub struct App {
     pub highlighted_index: usize,
     pub is_scanning: bool,
     pub selected_network: Option<WifiNetwork>,
+    pub connected_network: Option<WifiNetwork>,
     pub password_input: String,
     pub input_mode: InputMode,
     pub tx: Sender<Vec<WifiNetwork>>,
@@ -29,6 +30,7 @@ impl App {
             is_scanning: false,
             input_mode: InputMode::Normal,
             selected_network: None,
+            connected_network: None,
             password_input: String::new(),
             tx,
             rx,
@@ -49,21 +51,22 @@ impl App {
     }
 
     pub fn connect(&mut self) {
-        if let Some(net) = self.selected_network.as_ref() {
-            let pass = if net.is_saved {
-                None
-            } else {
-                Some(self.password_input.clone())
-            };
+        if let Some(net) = self.selected_network.take() {
+            let pass = if net.is_saved { None } else { Some(self.password_input.clone()) };
+
             match network::connect_to_net(&net.ssid, pass) {
                 Ok(_) => {
+                    for n in &mut self.wifi_list {
+                        n.is_connected = n.ssid == net.ssid;
+                    }
+                    self.connected_network = Some(net);
                     self.selected_network = None;
                     self.password_input.clear();
                     self.input_mode = InputMode::Normal;
                 }
                 Err(e) => {
-                    // TODO: put error message into TUI
                     eprintln!("Connection failed: {}", e);
+                    self.selected_network = Some(net);
                 }
             }
         }
@@ -72,12 +75,15 @@ impl App {
     pub fn update(&mut self) {
         if let Ok(networks) = self.rx.try_recv() {
             self.wifi_list = networks;
+            if self.highlighted_index >= self.wifi_list.len() {
+                self.highlighted_index = self.wifi_list.len().saturating_sub(1);
+            }
             self.is_scanning = false;
         }
     }
 
     pub fn next(&mut self) {
-        if self.highlighted_index < self.wifi_list.len() - 1 {
+        if self.highlighted_index < self.wifi_list.len().saturating_sub(1) {
             self.highlighted_index += 1;
         }
     }
